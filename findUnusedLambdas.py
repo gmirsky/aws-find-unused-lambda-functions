@@ -38,12 +38,10 @@ def retrieve_function_arns(lambda_client, region):
 def run_query(athena_client, query, region, athena_s3_bucket_name):
     response = athena_client.start_query_execution(
         QueryString=query,
-        QueryExecutionContext={
-            'Database': 'default'
-        },
+        QueryExecutionContext={'Database': 'default'},
         ResultConfiguration={
-            'OutputLocation': athena_s3_bucket_name + "-" + region,
-        }
+            'OutputLocation': f"{athena_s3_bucket_name}-{region}"
+        },
     )
     print('Query Execution ID: ' + response['QueryExecutionId'])
     execution_status = None
@@ -60,10 +58,9 @@ def run_query(athena_client, query, region, athena_s3_bucket_name):
         print("Running")
         time.sleep(5)
 
-    results = athena_client.get_query_results(
+    return athena_client.get_query_results(
         QueryExecutionId=response['QueryExecutionId']
     )
-    return results
 
 
 def build_query_strings(function_arns, table_name, cloudtrail_s3_bucket_name, year, region):
@@ -358,16 +355,15 @@ def main():
                                   cloudtrail_s3_bucket_name=args.cloudtrail_s3_bucket_name,
                                   region=args.region)
     print("Starting queries")
-    # # Run the queries
-    query_results = []
-    for q in queries:
-        # Run the query
-        query_results.append(
-            run_query(athena_client=athena_client,
-                      query=q,
-                      athena_s3_bucket_name=args.athena_s3_bucket_name,
-                      region=args.region)
+    query_results = [
+        run_query(
+            athena_client=athena_client,
+            query=q,
+            athena_s3_bucket_name=args.athena_s3_bucket_name,
+            region=args.region,
         )
+        for q in queries
+    ]
     print("Completed queries")
     # We made sure that the last query run gets the data that we care about
     result_set = query_results[-1]['ResultSet']['Rows']
@@ -383,8 +379,9 @@ def main():
         get_set_of_function_arns_from_result_set.count
 
     # Print the number of functions that haven't been invoked in the past 30 days
-    print("\nOut of the {}, there are {} functions that haven't been invoked in the past 30 days".format(
-        retrieve_function_arns.count, unusedcount))
+    print(
+        f"\nOut of the {retrieve_function_arns.count}, there are {unusedcount} functions that haven't been invoked in the past 30 days"
+    )
 
     # create a list of the functions that haven't been invoked in the past 30 days
     difference_list = list(set(function_arns) - set_of_functions_used)
