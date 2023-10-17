@@ -270,7 +270,7 @@ def main():
             'You must use Python 3 or higher :cross_mark:',
             language='alias'))
         # Print an error message and raise an exception.
-        raise Exception("You must use Python 3 or higher")
+        raise ValueError("You must use Python 3 or higher")
     else:
         print(emoji.emojize(
             ':check_mark_button:  Python version is OK,',
@@ -282,7 +282,7 @@ def main():
             ':cross_mark:  AWS CLI is not installed!',
             language='alias'))
         # Print an error message and raise an exception.
-        raise Exception("AWS CLI is not installed")
+        raise ValueError("AWS CLI is not installed")
     else:
         print(emoji.emojize(
             ':check_mark_button:  AWS CLI is installed.',
@@ -296,7 +296,7 @@ def main():
             print(emoji.emojize(
                 ':heavy_exclamation_mark:  You must use AWS CLI version 2 or higher!',
                 language='alias'))
-            raise Exception("You must use AWS CLI version 2 or higher")
+            raise ValueError("You must use AWS CLI version 2 or higher")
         else:
             # Display the version of the AWS CLI.
             print(emoji.emojize(":ok:  AWS CLI version: {}", language='alias').format(
